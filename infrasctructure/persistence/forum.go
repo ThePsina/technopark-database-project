@@ -189,147 +189,117 @@ func (forumDB *ForumDB) GetUsers(forum *entity.Forum, desc, limit, since string)
 
 func (forumDB *ForumDB) Prepare() error {
 	_, err := forumDB.db.Prepare("forum_insert_into",
-		"INSERT INTO forum (slug, title, usr) "+
-			"VALUES ($1, $2, $3) "+
-			"RETURNING title",
+		"insert into forum (slug, title, usr) values ($1, $2, $3) returning title",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_by_slug",
-		"SELECT f.posts, f.slug, f.threads,f.title, f.usr "+
-			"FROM forum f "+
-			"WHERE f.slug = $1 ",
+		"select f.posts, f.slug, f.threads,f.title, f.usr from forum f where f.slug = $1 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_threads_desc",
-		"SELECT t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes FROM thread t "+
-			"WHERE t.forum = $1 AND t.created <=  $2::timestamptz "+
-			"ORDER BY t.created DESC ",
+		"select t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes from thread t "+
+			"where t.forum = $1 and t.created <=  $2::timestamptz order by t.created desc ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_threads_desc_with_limit",
-		"SELECT t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes FROM thread t "+
-			"WHERE t.forum = $1 AND t.created <=  $2::timestamptz "+
-			"ORDER BY t.created DESC "+
-			"LIMIT $3",
+		"select t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes from thread t "+
+			"where t.forum = $1 and t.created <=  $2::timestamptz order by t.created desc limit $3",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_threads_asc",
-		"SELECT t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes FROM thread t "+
-			"WHERE t.forum = $1 AND t.created >=  $2::timestamptz "+
-			"ORDER BY t.created ",
+		"select t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes from thread t "+
+			"where t.forum = $1 and t.created >=  $2::timestamptz order by t.created ",
 	)
 	if err != nil {
 		return err
 	}
 	_, err = forumDB.db.Prepare("forum_get_threads_asc_with_limit",
-		"SELECT t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes FROM thread t "+
-			"WHERE t.forum = $1 AND t.created >=  $2::timestamptz "+
-			"ORDER BY t.created "+
-			"LIMIT $3 ",
+		"select t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes from thread t "+
+			"where t.forum = $1 and t.created >=  $2::timestamptz order by t.created limit $3 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 "+
-			"ORDER BY u.nickname ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 order by u.nickname ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users_with_limit",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 "+
-			"ORDER BY u.nickname "+
-			"LIMIT $2 ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 order by u.nickname limit $2 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users_desc",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 "+
-			"ORDER BY u.nickname DESC ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 order by u.nickname desc ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users_desc_with_limit",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 "+
-			"ORDER BY u.nickname DESC "+
-			"LIMIT $2 ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 order by u.nickname desc limit $2 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users_desc_with_since_with_limit",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 AND u.nickname < $2 "+
-			"ORDER BY u.nickname DESC "+
-			"LIMIT $3 ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 and u.nickname < $2 order by u.nickname desc limit $3 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users_desc_with_since",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 AND u.nickname < $2 "+
-			"ORDER BY u.nickname DESC",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 and u.nickname < $2 order by u.nickname desc",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users_asc_with_since_with_limit",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 AND u.nickname > $2 "+
-			"ORDER BY u.nickname "+
-			"LIMIT $3 ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 and u.nickname > $2 order by u.nickname limit $3 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = forumDB.db.Prepare("forum_get_users_asc_with_since",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM forum_users "+
-			"JOIN usr u on forum_users.nickname = u.nickname "+
-			"WHERE forum = $1 AND u.nickname > $2 "+
-			"ORDER BY u.nickname ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from forum_users join usr u on forum_users.nickname = u.nickname "+
+			"where forum = $1 and u.nickname > $2 order by u.nickname ",
 	)
 	if err != nil {
 		return err

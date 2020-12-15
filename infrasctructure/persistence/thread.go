@@ -439,394 +439,311 @@ func (threadDB *ThreadDB) GetPosts(thread *entity.Thread, desc, sort, limit, sin
 
 func (threadDB *ThreadDB) Prepare() error {
 	_, err := threadDB.db.Prepare("thread_insert_into",
-		"INSERT INTO thread (usr, created, forum, message, title, slug) VALUES ($1, $2, $3, $4, $5, $6)"+
-			"ON CONFLICT DO NOTHING "+
-			"RETURNING id",
+		"insert into thread (usr, created, forum, message, title, slug) values ($1, $2, $3, $4, $5, $6)"+
+			"on conflict do nothing "+
+			"returning id",
 	)
 	if err != nil {
 		return err
 	}
 
-	_, err = threadDB.db.Prepare("get_forum_user",
-		"SELECT nickname FROM forum_users "+
-			"WHERE forum = $1 AND nickname = $2 ",
-	)
+	_, err = threadDB.db.Prepare(
+		"get_forum_user",
+		"select nickname from forum_users where forum = $1 and nickname = $2 ")
 	if err != nil {
 		return err
 	}
 
-	_, err = threadDB.db.Prepare("forum_users_insert_into",
-		"INSERT INTO forum_users (forum, nickname) "+
-			"VALUES ($1,$2) ",
-	)
+	_, err = threadDB.db.Prepare("forum_users_insert_into","insert into forum_users (forum, nickname) values ($1,$2) ")
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_get_by_slug",
-		"SELECT t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes  "+
-			"FROM thread t "+
-			"WHERE t.slug = $1",
+		"select t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes from thread t where t.slug = $1",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_get_by_id",
-		"SELECT t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes "+
-			"FROM thread t "+
-			"WHERE t.id = $1 ",
+		"select t.id, t.title, t.message, t.created, t.slug, t.usr, t.forum, t.votes from thread t where t.id = $1 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("votes_insert_into",
-		"INSERT INTO vote (vote, usr, thread) VALUES ($1 , $2, $3) "+
-			"RETURNING thread",
+		"insert into vote (vote, usr, thread) VALUES ($1 , $2, $3) returning thread",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("votes_update",
-		"UPDATE vote SET vote = $1 WHERE usr = $2 and thread = $3 "+
-			"RETURNING thread",
+		"update vote set vote = $1 where usr = $2 and thread = $3 returning thread",
 	)
 	if err != nil {
 		return err
 	}
 
-	_, err = threadDB.db.Prepare("votes_get_info",
-		"SELECT vote FROM vote "+
-			"WHERE usr = $1 and thread = $2 ",
-	)
+	_, err = threadDB.db.Prepare("votes_get_info","select vote from vote where usr = $1 and thread = $2 ")
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_update_all",
-		"UPDATE thread SET "+
-			"message = $1, "+
-			"title = $2 "+
-			"WHERE id::citext = $3 or slug = $3 "+
-			"RETURNING id, title, message, created, slug, usr, forum, votes",
+		"update thread set message = $1, title = $2 "+
+			"where id::citext = $3 or slug = $3 "+
+			"returning id, title, message, created, slug, usr, forum, votes",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_update_message",
-		"UPDATE thread SET "+
-			"message = $1 "+
-			"WHERE id::citext = $2 or slug = $2 "+
-			"RETURNING id, title, message, created, slug, usr, forum, votes",
+		"update thread set message = $1 "+
+			"where id::citext = $2 or slug = $2 "+
+			"returning id, title, message, created, slug, usr, forum, votes",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_update_title",
-		"UPDATE thread SET "+
-			"title = $1 "+
-			"WHERE id::citext = $2 or slug = $2 "+
-			"RETURNING id, title, message, created, slug, usr, forum, votes",
+		"update thread set title = $1 "+
+			"where id::citext = $2 or slug = $2 "+
+			"returning id, title, message, created, slug, usr, forum, votes",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_asc",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_desc",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.path DESC ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.path DESC ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_asc_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.path "+
-			"LIMIT $2 ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.path limit $2 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_desc_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.path DESC "+
-			"LIMIT $2 ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.path DESC limit $2 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_asc_with_since",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.path::bigint[] > (SELECT path FROM post WHERE id = $2 )::bigint[] "+
-			"ORDER BY p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p "+
+			"where p.thread = $1 and p.path::bigint[] > (select path from post where id = $2 )::bigint[] "+
+			"order by p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_desc_with_since",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.path::bigint[] < (SELECT path FROM post WHERE id = $2 )::bigint[] "+
-			"ORDER BY p.path DESC ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p "+
+			"where p.thread = $1 AND p.path::bigint[] < (select path from post where id = $2 )::bigint[] "+
+			"order by p.path DESC ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_asc_with_since_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.path::bigint[] > (SELECT path FROM post WHERE id = $2 )::bigint[] "+
-			"ORDER BY p.path "+
-			"LIMIT $3",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p "+
+			"where p.thread = $1 and p.path::bigint[] > (select path from post where id = $2 )::bigint[] "+
+			"order by p.path "+
+			"limit $3",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_tree_desc_with_since_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.path::bigint[] < (SELECT path FROM post WHERE id = $2 )::bigint[] "+
-			"ORDER BY p.path DESC "+
-			"LIMIT $3",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p "+
+			"where p.thread = $1 and p.path::bigint[] < (select path from post where id = $2 )::bigint[] "+
+			"order by p.path desc "+
+			"limit $3",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_asc",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	ORDER BY p2.path "+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 order by p2.path) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1], p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_desc",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	ORDER BY p2.path DESC "+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] DESC , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 order by p2.path DESC) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1] desc, p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_asc_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	ORDER BY p2.path "+
-			"	LIMIT $2"+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 order by p2.path limit $2) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1], p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_desc_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	ORDER BY p2.path DESC "+
-			"	LIMIT $2"+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] DESC , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 order by p2.path DESC limit $2) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1] desc, p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_asc_with_since",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	AND p2.path[1] > (SELECT path[1] FROM post WHERE id = $2 ) "+
-			"	ORDER BY p2.path "+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 " +
+			"and p2.path[1] > (select path[1] from post where id = $2 ) order by p2.path) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1], p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_desc_with_since",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	AND p2.path[1] < (SELECT path[1] FROM post WHERE id = $2 ) "+
-			"	ORDER BY p2.path DESC "+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] DESC , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 "+
+			"and p2.path[1] < (select path[1] from post where id = $2 ) order by p2.path desc) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1] desc , p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_asc_with_since_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	AND p2.path[1] > (SELECT path[1] FROM post WHERE id = $2 ) "+
-			"	ORDER BY p2.path "+
-			"	LIMIT $3"+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 "+
+			"and p2.path[1] > (select path[1] from post where id = $2 ) order by p2.path limit $3) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1], p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_posts_parent_desc_with_since_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
-			"("+
-			"   SELECT * FROM post p2 "+
-			"   WHERE p2.thread = $1 AND p2.parent = 0 "+
-			"	AND p2.path[1] < (SELECT path[1] FROM post WHERE id = $2 ) "+
-			"	ORDER BY p2.path DESC "+
-			"	LIMIT $3"+
-			") "+
-			"AS prt "+
-			"JOIN post p ON prt.path[1] = p.path[1] "+
-			"ORDER BY p.path[1] DESC , p.path ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread FROM "+
+			"(select * from post p2 where p2.thread = $1 and p2.parent = 0 "+
+			"and p2.path[1] < (select path[1] from post where id = $2 ) order by p2.path desc limit $3) "+
+			"as prt "+
+			"join post p on prt.path[1] = p.path[1] "+
+			"order by p.path[1] desc, p.path ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_asc",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.created, p.id",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.created, p.id",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_desc",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.created DESC , p.id DESC ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.created desc, p.id desc ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_asc_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.created, p.id "+
-			"LIMIT $2 ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.created, p.id limit $2 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_desc_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 "+
-			"ORDER BY p.created DESC , p.id DESC "+
-			"LIMIT $2",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 order by p.created desc , p.id desc limit $2",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_asc_with_since",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.id > $2 "+
-			"ORDER BY p.created, p.id",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 and p.id > $2 order by p.created, p.id",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_desc_with_since",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.id < $2 "+
-			"ORDER BY p.created DESC , p.id DESC ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 and p.id < $2 order by p.created desc, p.id desc ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_asc_with_since_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.id > $2 "+
-			"ORDER BY p.created, p.id "+
-			"LIMIT $3 ",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 and p.id > $2 order by p.created, p.id limit $3 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = threadDB.db.Prepare("thread_post_flat_desc_with_since_with_limit",
-		"SELECT p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
-			"FROM post p "+
-			"WHERE p.thread = $1 AND p.id < $2 "+
-			"ORDER BY p.created DESC , p.id DESC "+
-			"LIMIT $3",
+		"select p.id, p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread "+
+			"from post p where p.thread = $1 AND p.id < $2 order by p.created desc , p.id desc limit $3",
 	)
 	if err != nil {
 		return err

@@ -117,35 +117,31 @@ func (postDB *PostDB) Update(post *entity.Post) error {
 
 func (postDB *PostDB) Prepare() error {
 	_, err := postDB.db.Prepare("post_insert_into",
-		"INSERT INTO post (usr, message,  parent, thread, forum, created) "+
-			"VALUES ($1, $2, $3, $4, $5, current_timestamp) "+
-			"RETURNING id, created",
+		"insert into post (usr, message,  parent, thread, forum, created) "+
+			"values ($1, $2, $3, $4, $5, current_timestamp) returning id, created",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = postDB.db.Prepare("post_get_by_id",
-		"SELECT p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread, p.path "+
-			"FROM post p "+
-			"WHERE p.id = $1",
+		"select p.usr, p.created, p.forum, p.isEdited, p.message, p.parent, p.thread, p.path "+
+			"from post p where p.id = $1",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = postDB.db.Prepare("post_update",
-		"UPDATE post SET message = $1, isEdited = true "+
-			"WHERE id = $2 "+
-			"RETURNING usr, created, forum, isEdited, message, parent, thread",
+		"update post set message = $1, isEdited = true "+
+			"where id = $2 returning usr, created, forum, isEdited, message, parent, thread",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = postDB.db.Prepare("forum_posts_update",
-		"UPDATE forum  SET posts = (posts + $1) " +
-			"where slug = $2",
+		"update forum  set posts = (posts + $1) where slug = $2",
 	)
 	if err != nil {
 		return err

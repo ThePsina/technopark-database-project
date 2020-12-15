@@ -213,40 +213,31 @@ func (userDB *UserDB) GetStatus(s *entity.Status) error {
 
 func (userDB *UserDB) Prepare() error {
 	_, err := userDB.db.Prepare("user_insert",
-		"INSERT INTO usr (email, fullname, nickname, about) "+
-			"VALUES ($1, $2, $3, $4) "+
-			"ON CONFLICT DO NOTHING "+
-			"RETURNING email",
+		"insert into usr (email, fullname, nickname, about) "+
+			"values ($1, $2, $3, $4) on conflict do nothing returning email",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = userDB.db.Prepare("user_get_by_nickname",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM usr u "+
-			"WHERE nickname = $1 ",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from usr u where nickname = $1 ",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = userDB.db.Prepare("user_get_by_nickname_or_email",
-		"SELECT u.email, u.fullname, u.nickname, u.about "+
-			"FROM usr u "+
-			"WHERE nickname = $1 OR email = $2",
+		"select u.email, u.fullname, u.nickname, u.about "+
+			"from usr u where nickname = $1 or email = $2",
 	)
 	if err != nil {
 		return err
 	}
 
 	_, err = userDB.db.Prepare("user_update",
-		"UPDATE usr SET "+
-			"email = $1, "+
-			"nickname = $2, "+
-			"fullname = $3, "+
-			"about = $4 "+
-			"WHERE nickname = $2 RETURNING email",
+		"update usr set email = $1, nickname = $2, fullname = $3, about = $4 where nickname = $2 returning email",
 	)
 	if err != nil {
 		return err
