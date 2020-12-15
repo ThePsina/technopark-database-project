@@ -6,7 +6,7 @@ type ThreadRepo interface {
 	GetBySlug(thread *entity.Thread) error
 	GetById(thread *entity.Thread) error
 	GetBySlugOrId(thread *entity.Thread) error
-	GetPosts(thread *entity.Thread, desc, sort, limit, since string) ([]entity.Post, error)
+	GetPosts(thread *entity.Thread, desc, sort, limit, since string) (entity.Posts, error)
 
 	InsertInto(thread *entity.Thread) error
 	InsertIntoVotes(thread *entity.Thread, vote *entity.Vote) error

@@ -317,7 +317,7 @@ func (threadDB *ThreadDB) Update(thread *entity.Thread) error {
 	return nil
 }
 
-func (threadDB *ThreadDB) GetPosts(thread *entity.Thread, desc, sort, limit, since string) ([]entity.Post, error) {
+func (threadDB *ThreadDB) GetPosts(thread *entity.Thread, desc, sort, limit, since string) (entity.Posts, error) {
 	tx, err := threadDB.db.Begin()
 	if err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 )
 
+//easyjson:json
 type Post struct {
 	Author   string           `json:"author"`
 	Created  string           `json:"created"`
@@ -18,6 +19,9 @@ type Post struct {
 	Thread   int64            `json:"thread"`
 	Path     pgtype.Int8Array `json:"-"`
 }
+
+//easyjson:json
+type Posts []Post
 
 func GetPostFromBody(body io.ReadCloser) (Post, error) {
 	data, err := ioutil.ReadAll(body)
@@ -32,4 +36,28 @@ func GetPostFromBody(body io.ReadCloser) (Post, error) {
 		return Post{}, err
 	}
 	return f, nil
+}
+
+func GetPostsFromBody(body io.ReadCloser) ([]*Post, error) {
+	data, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+
+	var f []*Post
+	err = json.Unmarshal(data, &f)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+func ConvertToPosts(p []*Post) Posts {
+	ps := make(Posts, 0, len(p))
+	for _, val := range p {
+		ps = append(ps, *val)
+	}
+
+	return ps
 }

@@ -46,7 +46,7 @@ func (forumApp *ForumApp) GetForum(f *entity.Forum) error {
 	return nil
 }
 
-func (forumApp *ForumApp) GetForumThreads(f *entity.Forum, desc, limit, since string) ([]entity.Thread, error) {
+func (forumApp *ForumApp) GetForumThreads(f *entity.Forum, desc, limit, since string) (entity.Threads, error) {
 	err := forumApp.forumRepo.GetBySlug(f)
 	if err != nil {
 		return nil, tools.ForumNotExist
@@ -60,7 +60,7 @@ func (forumApp *ForumApp) GetForumThreads(f *entity.Forum, desc, limit, since st
 	return ths, nil
 }
 
-func (forumApp *ForumApp) GetForumUsers(f *entity.Forum, desc, limit, since string) ([]entity.User, error) {
+func (forumApp *ForumApp) GetForumUsers(f *entity.Forum, desc, limit, since string) (entity.Users, error) {
 	err := forumApp.forumRepo.GetBySlug(f)
 	if err != nil {
 		return nil, tools.ForumNotExist

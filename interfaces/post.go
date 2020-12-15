@@ -28,17 +28,13 @@ func Find(slice []string, val string) bool {
 	return false
 }
 
-func NewPostHandler(router *mux.Router, postApp *application.PostApp, userApp *application.UserApp,
-	threadApp *application.ThreadApp, forumApp *application.ForumApp) {
-	ph := &PostHandler{postApp, userApp, threadApp, forumApp}
-
-	router.HandleFunc("/api/thread/{slug}/create", ph.CreatePosts).Methods(http.MethodPost)
-	router.HandleFunc("/api/post/{id}/details", ph.GetPost).Methods(http.MethodGet).Queries("related")
-	router.HandleFunc("/api/post/{id}/details", ph.UpdatePost).Methods(http.MethodPost)
+func NewPostHandler(postApp *application.PostApp, userApp *application.UserApp,
+	threadApp *application.ThreadApp, forumApp *application.ForumApp) *PostHandler {
+	return &PostHandler{postApp, userApp, threadApp, forumApp}
 }
 
 func (ph *PostHandler) CreatePosts(w http.ResponseWriter, r *http.Request) {
-	p := make([]*entity.Post, 0)
+	p, _ := entity.GetPostsFromBody(r.Body)
 
 	th := entity.Thread{}
 	vars := mux.Vars(r)
@@ -47,6 +43,7 @@ func (ph *PostHandler) CreatePosts(w http.ResponseWriter, r *http.Request) {
 	err := ph.postApp.CreatePosts(p, &th)
 	if err != nil {
 		if err == tools.ParentNotExist {
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusConflict)
 			res, err := json.Marshal(&tools.Message{Message: "parent conflict"})
 			tools.HandleError(err)
@@ -54,6 +51,7 @@ func (ph *PostHandler) CreatePosts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err == tools.ThreadNotExist || err == tools.UserNotExist {
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
 			res, err := json.Marshal(&tools.Message{Message: "user or thread not found"})
 			tools.HandleError(err)
@@ -67,14 +65,15 @@ func (ph *PostHandler) CreatePosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	res, err := json.Marshal(&p)
+	res, err := entity.ConvertToPosts(p).MarshalJSON()
 	tools.HandleError(err)
 	w.Write(res)
 }
 
 func (ph *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
-	str := r.FormValue("related")
+	str := r.URL.Query().Get("related")
 	related := strings.Split(str, ",")
 
 	p := &entity.Post{}
@@ -90,6 +89,7 @@ func (ph *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 		logrus.Error("Cannot parse id")
 	}
 	if err := ph.postApp.GetPost(p); err != nil {
+		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		res, err := json.Marshal(&tools.Message{Message: err.Error()})
 		tools.HandleError(err)
@@ -121,13 +121,9 @@ func (ph *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 		f = nil
 	}
 
-	ans := entity.Info{
-		Post:   p,
-		Forum:  f,
-		Thread: th,
-		Author: u,
-	}
+	ans := entity.Info{Post:   p, Forum:  f, Thread: th, Author: u}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(&ans)
 	tools.HandleError(err)
@@ -135,13 +131,14 @@ func (ph *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
-	p := &entity.Post{}
+	p, _ := entity.GetPostFromBody(r.Body)
 	vars := mux.Vars(r)
 	var err error
 
 	p.Id, err = strconv.ParseInt(vars["id"], 10, 64)
 	tools.HandleError(err)
-	if err := ph.postApp.UpdatePost(p); err != nil {
+	if err := ph.postApp.UpdatePost(&p); err != nil {
+		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		res, err := json.Marshal(&tools.Message{Message: "post not found"})
 		tools.HandleError(err)
@@ -149,8 +146,9 @@ func (ph *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	res, err := json.Marshal(&p)
+	res, err := p.MarshalJSON()
 	tools.HandleError(err)
 	w.Write(res)
 }

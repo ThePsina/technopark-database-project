@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 )
 
+//easyjson:json
 type Forum struct {
 	Posts   int64  `json:"posts"`
 	Slug    string `json:"slug"`

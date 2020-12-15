@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 )
 
+//easyjson:json
 type Vote struct {
 	Vote     int32  `json:"voice"`
 	Nickname string `json:"nickname"`

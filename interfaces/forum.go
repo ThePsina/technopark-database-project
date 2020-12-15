@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -14,14 +15,8 @@ type ForumHandler struct {
 	forumApp *application.ForumApp
 }
 
-func NewForumHandler(router *mux.Router, forumApp *application.ForumApp) {
-	fh := &ForumHandler{forumApp}
-
-	router.HandleFunc("/api/forum/create", fh.CreateForum).Methods(http.MethodPost)
-	router.HandleFunc("/api/forum/{slug}/details", fh.GetForumInfo).Methods(http.MethodGet)
-	router.HandleFunc("/api/forum/{slug}/threads", fh.GetForumThreads).
-		Queries("desc", "limit", "since").Methods(http.MethodGet)
-	router.HandleFunc("/api/forum/{slug}/users", fh.GetForumUsers).Methods(http.MethodGet)
+func NewForumHandler(forumApp *application.ForumApp) *ForumHandler {
+	return &ForumHandler{forumApp}
 }
 
 func (fh *ForumHandler) CreateForum(w http.ResponseWriter, r *http.Request) {
@@ -33,13 +28,18 @@ func (fh *ForumHandler) CreateForum(w http.ResponseWriter, r *http.Request) {
 	if err := fh.forumApp.CreateForum(f); err != nil {
 		switch err {
 		case tools.UserNotExist:
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
 			res, err := json.Marshal(&tools.Message{Message: "User not found"})
 			w.Write(res)
 			tools.HandleError(err)
 			return
 		case tools.ForumExist:
-			w.WriteHeader(http.StatusNotFound)
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			res, err := f.MarshalJSON()
+			w.Write(res)
+			tools.HandleError(err)
 			return
 		default:
 			logrus.Error(err)
@@ -47,6 +47,7 @@ func (fh *ForumHandler) CreateForum(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	res, err := json.Marshal(&f)
 	w.Write(res)
@@ -54,12 +55,14 @@ func (fh *ForumHandler) CreateForum(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fh *ForumHandler) GetForumInfo(w http.ResponseWriter, r *http.Request) {
-	f := &entity.Forum{}
+	f, err := entity.GetForumFromBody(r.Body)
+	tools.HandleError(err)
 
 	vars := mux.Vars(r)
 	f.Slug = vars["slug"]
 
 	if err := fh.forumApp.GetForum(f); err != nil {
+		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		res, err := json.Marshal(&tools.Message{Message: "User not found"})
 		tools.HandleError(err)
@@ -67,6 +70,7 @@ func (fh *ForumHandler) GetForumInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(&f)
 	w.Write(res)
@@ -74,17 +78,20 @@ func (fh *ForumHandler) GetForumInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fh *ForumHandler) GetForumThreads(w http.ResponseWriter, r *http.Request) {
-	f := &entity.Forum{}
+	fmt.Println("****")
+	f, err := entity.GetForumFromBody(r.Body)
+	tools.HandleError(err)
 
 	vars := mux.Vars(r)
 	f.Slug = vars["slug"]
 
-	ths, err := fh.forumApp.GetForumThreads(f, r.FormValue("desc"), r.FormValue("limit"), r.FormValue("since"))
+	ths, err := fh.forumApp.GetForumThreads(f, r.URL.Query().Get("desc"), r.URL.Query().Get("limit"), r.URL.Query().Get("since"))
 	if err != nil {
 		switch err {
 		case tools.ForumNotExist:
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			res, err := json.Marshal(&tools.Message{Message: "forum not found"})
+			res, err := tools.Message{Message: "forum not found"}.MarshalJSON()
 			tools.HandleError(err)
 			w.Write(res)
 			return
@@ -94,10 +101,11 @@ func (fh *ForumHandler) GetForumThreads(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	res, err := json.Marshal(&ths)
-	w.Write(res)
+	res, err := ths.MarshalJSON()
 	tools.HandleError(err)
+	w.Write(res)
 }
 
 func (fh *ForumHandler) GetForumUsers(w http.ResponseWriter, r *http.Request) {
@@ -110,6 +118,7 @@ func (fh *ForumHandler) GetForumUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case tools.ForumNotExist:
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
 			res, err := json.Marshal(&tools.Message{Message: "forum not found"})
 			tools.HandleError(err)
@@ -122,6 +131,7 @@ func (fh *ForumHandler) GetForumUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(&users)
 	w.Write(res)

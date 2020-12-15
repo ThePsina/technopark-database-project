@@ -14,7 +14,7 @@ func NewUserApp(userRepo repository.UserRepo) *UserApp {
 	return &UserApp{userRepo}
 }
 
-func (userApp *UserApp) CreateUser(u *entity.User) ([]entity.User, error) {
+func (userApp *UserApp) CreateUser(u *entity.User) (entity.Users, error) {
 	err := userApp.userRepo.InsertInto(u)
 	if err != nil {
 		users, e := userApp.userRepo.GetByNicknameOrEmail(u)
@@ -23,7 +23,7 @@ func (userApp *UserApp) CreateUser(u *entity.User) ([]entity.User, error) {
 		return users, tools.UserExist
 	}
 
-	return nil, nil
+	return entity.Users{}, nil
 }
 
 func (userApp *UserApp) GetUser(u *entity.User) error {

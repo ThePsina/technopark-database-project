@@ -1,15 +1,3 @@
-ALTER SYSTEM SET checkpoint_completion_target = '0.9';
-ALTER SYSTEM SET wal_buffers = '6912kB';
-ALTER SYSTEM SET default_statistics_target = '100';
-ALTER SYSTEM SET random_page_cost = '1.1';
-ALTER SYSTEM SET effective_io_concurrency = '200';
-ALTER SYSTEM SET seq_page_cost = '0.1';
-ALTER SYSTEM SET random_page_cost = '0.1';
-ALTER SYSTEM SET max_worker_processes = '4';
-ALTER SYSTEM SET max_parallel_workers_per_gather = '2';
-ALTER SYSTEM SET max_parallel_workers = '4';
-ALTER SYSTEM SET max_parallel_maintenance_workers = '2';
-
 drop trigger IF EXISTS path_updater ON post;
 drop trigger if exists forum_users_clear on forum_users;
 drop trigger if exists forum_user_insert_after_thread on thread;
@@ -28,15 +16,15 @@ drop table IF EXISTS post CASCADE;
 drop table IF EXISTS vote CASCADE;
 drop table IF EXISTS forum_users CASCADE;
 
-create EXTENSION IF NOT EXISTS CITEXT;
+CREATE EXTENSION IF NOT EXISTS CITEXT;
 
 ------------------------ USER ------------------------------------------
 create unlogged table usr
 (
     id       serial primary key,
-    email    citext collate "C" not null unique,
+    email    CITEXT collate "C" not null unique,
     fullname text               not null,
-    nickname citext collate "C" not null unique,
+    nickname CITEXT collate "C" not null unique,
     about    text
 );
 
@@ -48,9 +36,9 @@ cluster usr using index_usr_all;
 create unlogged table forum
 (
     id      serial primary key,
-    slug    citext collate "C" not null unique,
+    slug    CITEXT collate "C" not null unique,
     title   text               not null,
-    usr     citext collate "C" not null
+    usr     CITEXT collate "C" not null
         references usr (nickname)
             on delete cascade,
     threads bigint default 0,
@@ -69,12 +57,12 @@ create unlogged table thread
     title   text               not null,
     message text               not null,
     created timestamp with time zone,
-    slug    citext collate "C" unique,
+    slug    CITEXT collate "C" unique,
     votes   int default 0,
-    usr     citext collate "C" not null
+    usr     CITEXT collate "C" not null
         references usr (nickname)
             on delete cascade,
-    forum   citext collate "C" not null
+    forum   CITEXT collate "C" not null
         references forum (slug)
             on delete cascade
 );
@@ -95,13 +83,13 @@ create unlogged table post
     isedited boolean default false not null,
     parent   integer default 0,
     created  timestamp,
-    usr      citext collate "C"    not null
+    usr      CITEXT collate "C"    not null
              references usr (nickname)
              on delete cascade,
     thread   integer               not null
              references thread
              on delete cascade,
-    forum    citext                not null
+    forum    CITEXT                not null
              references forum (slug)
              on delete cascade,
     path     bigint[]
@@ -122,7 +110,7 @@ create unlogged table vote
 (
     id     serial           primary key,
     vote   integer            not null,
-    usr    citext collate "C" not null
+    usr    CITEXT collate "C" not null
             references usr (nickname)
             on delete cascade,
     thread integer            not null
@@ -137,9 +125,9 @@ create index index_vote_thread on vote (thread);
 ------------------------------ FORUM USERS -----------------------------------
 create unlogged table forum_users
 (
-    forum    citext collate "C" not null
+    forum    CITEXT collate "C" not null
             references forum (slug)  on delete cascade,
-    nickname citext collate "C" not null
+    nickname CITEXT collate "C" not null
             references usr (nickname) on delete cascade
 );
 

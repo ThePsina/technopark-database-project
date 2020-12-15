@@ -76,7 +76,7 @@ func (userDB *UserDB) GetByNickname(user *entity.User) error {
 	return nil
 }
 
-func (userDB *UserDB) GetByNicknameOrEmail(user *entity.User) ([]entity.User, error) {
+func (userDB *UserDB) GetByNicknameOrEmail(user *entity.User) (entity.Users, error) {
 	tx, err := userDB.db.Begin()
 	if err != nil {
 		return nil, err

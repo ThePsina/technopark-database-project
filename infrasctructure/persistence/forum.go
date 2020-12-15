@@ -60,7 +60,7 @@ func (forumDB *ForumDB) GetBySlug(forum *entity.Forum) error {
 	return nil
 }
 
-func (forumDB *ForumDB) GetThreads(forum *entity.Forum, desc, limit, since string) ([]entity.Thread, error) {
+func (forumDB *ForumDB) GetThreads(forum *entity.Forum, desc, limit, since string) (entity.Threads, error) {
 	tx, err := forumDB.db.Begin()
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (forumDB *ForumDB) GetThreads(forum *entity.Forum, desc, limit, since strin
 	return threads, nil
 }
 
-func (forumDB *ForumDB) GetUsers(forum *entity.Forum, desc, limit, since string) ([]entity.User, error) {
+func (forumDB *ForumDB) GetUsers(forum *entity.Forum, desc, limit, since string) (entity.Users, error) {
 	tx, err := forumDB.db.Begin()
 	if err != nil {
 		return nil, err

@@ -14,16 +14,8 @@ type UserHandler struct {
 	userApp *application.UserApp
 }
 
-func NewUserHandler(router *mux.Router, userApp *application.UserApp) *UserHandler {
-	uh := &UserHandler{userApp}
-
-	router.HandleFunc("/api/service/status", uh.GetStatus)
-	router.HandleFunc("/api/service/clear", uh.DeleteAll)
-	router.HandleFunc("/api/user/{nickname}/profile", uh.GetUser)
-	router.HandleFunc("/api/user/{nickname}/profile", uh.UpdateUser)
-	router.HandleFunc("/api/user/{nickname}/create", uh.AddUser)
-
-	return uh
+func NewUserHandler(userApp *application.UserApp) *UserHandler {
+	return &UserHandler{userApp}
 }
 
 func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +29,8 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case tools.UserExist:
 			w.WriteHeader(http.StatusConflict)
-			res, err := json.Marshal(&users)
+			res, err := users.MarshalJSON()
+			w.Header().Add("Content-Type", "application/json")
 			tools.HandleError(err)
 			w.Write(res)
 			return
@@ -47,22 +40,25 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	res, err := json.Marshal(&resp)
+	res, err := resp.MarshalJSON()
 	tools.HandleError(err)
 	w.Write(res)
 }
 
 func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	resp := &entity.User{}
+	resp, err := entity.GetUserFromBody(r.Body)
+	tools.HandleError(err)
 	vars := mux.Vars(r)
 	resp.Nickname = vars["nickname"]
 
 	if err := uh.userApp.GetUser(resp); err != nil {
 		switch err {
 		case tools.UserNotExist:
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			res, err := json.Marshal(&tools.Message{Message: "user not found"})
+			res, err := tools.Message{Message: "user not found"}.MarshalJSON()
 			tools.HandleError(err)
 			w.Write(res)
 			return
@@ -72,8 +68,9 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	res, err := json.Marshal(&resp)
+	res, err := resp.MarshalJSON()
 	tools.HandleError(err)
 	w.Write(res)
 }
@@ -88,14 +85,16 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err := uh.userApp.UpdateUser(u); err != nil {
 		switch err {
 		case tools.UserNotExist:
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			res, err := json.Marshal(&tools.Message{Message: "user doesn't exist"})
+			res, err := tools.Message{Message: "user doesn't exist"}.MarshalJSON()
 			tools.HandleError(err)
 			w.Write(res)
 			return
 		case tools.UserNotUpdated:
+			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusConflict)
-			res, err := json.Marshal(&tools.Message{Message: "conflict while updating"})
+			res, err := tools.Message{Message: "conflict while updating"}.MarshalJSON()
 			tools.HandleError(err)
 			w.Write(res)
 			return
@@ -105,8 +104,9 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	res, err := json.Marshal(&u)
+	res, err := u.MarshalJSON()
 	tools.HandleError(err)
 	w.Write(res)
 }
@@ -115,6 +115,7 @@ func (uh *UserHandler) DeleteAll(w http.ResponseWriter, r *http.Request) {
 	err := uh.userApp.DeleteAll()
 	tools.HandleError(err)
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(&tools.Message{Message: "all info deleted"})
 	tools.HandleError(err)
@@ -125,6 +126,7 @@ func (uh *UserHandler) GetStatus(w http.ResponseWriter, r *http.Request) {
 	s := &entity.Status{}
 	err := uh.userApp.GetStatus(s)
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(&s)
 	tools.HandleError(err)

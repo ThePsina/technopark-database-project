@@ -6,7 +6,7 @@ RUN go build ./cmd/main.go
 
 FROM ubuntu:20.04
 
-MAINTAINER farcoad
+MAINTAINER thepsina
 
 RUN apt-get -y update && apt-get install -y tzdata
 
@@ -19,8 +19,8 @@ RUN apt-get -y update && apt-get install -y postgresql-$PGVER
 USER postgres
 
 RUN /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER farcoad WITH SUPERUSER PASSWORD 'postgres';" &&\
-    createdb -O farcoad forum &&\
+    psql --command "CREATE USER thepsina WITH SUPERUSER PASSWORD 'postgres';" &&\
+    createdb -O thepsina forum &&\
     /etc/init.d/postgresql stop
 
 RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/$PGVER/main/pg_hba.conf
@@ -52,4 +52,4 @@ COPY --from=build /opt/app/main .
 
 EXPOSE 5000
 ENV PGPASSWORD postgres
-CMD service postgresql start &&  psql -h localhost -d forum -U farcoad -p 5432 -a -q -f ./init/init.sql && ./main
+CMD service postgresql start &&  psql -h localhost -d forum -U thepsina -p 5432 -a -q -f ./init/init.sql && ./main

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 )
 
+//easyjson:json
 type Thread struct {
 	Author  string `json:"author"`
 	Created string `json:"created,omitempty"`
@@ -16,6 +17,9 @@ type Thread struct {
 	Title   string `json:"title"`
 	Votes   int64  `json:"votes"`
 }
+
+//easyjson:json
+type Threads []Thread
 
 func GetThreadFromBody(body io.ReadCloser) (*Thread, error) {
 	data, err := ioutil.ReadAll(body)
