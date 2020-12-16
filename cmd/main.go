@@ -9,7 +9,7 @@ import (
 
 func main() {
 	server := &http.Server{
-		Addr:         "127.0.0.1:5000",
+		Addr:         ":5000",
 		Handler:      interfaces.RegisterHandlers(),
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
