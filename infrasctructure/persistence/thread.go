@@ -454,7 +454,8 @@ func (threadDB *ThreadDB) Prepare() error {
 		return err
 	}
 
-	_, err = threadDB.db.Prepare("forum_users_insert_into","insert into forum_users (forum, nickname) values ($1,$2) ")
+	_, err = threadDB.db.Prepare("forum_users_insert_into","insert into forum_users (forum, nickname) " +
+		"values ($1, $2) on conflict do nothing")
 	if err != nil {
 		return err
 	}
