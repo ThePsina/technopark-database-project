@@ -2,7 +2,6 @@ package interfaces
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -78,7 +77,6 @@ func (fh *ForumHandler) GetForumInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fh *ForumHandler) GetForumThreads(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("****")
 	f, err := entity.GetForumFromBody(r.Body)
 	tools.HandleError(err)
 
