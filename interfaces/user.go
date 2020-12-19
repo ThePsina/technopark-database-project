@@ -3,7 +3,6 @@ package interfaces
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"tech-db-project/application"
 	"tech-db-project/domain/entity"
@@ -35,7 +34,6 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 			w.Write(res)
 			return
 		default:
-			logrus.Error(err)
 			return
 		}
 	}
@@ -63,7 +61,6 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 			w.Write(res)
 			return
 		default:
-			logrus.Error(err)
 			return
 		}
 	}
@@ -99,7 +96,6 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			w.Write(res)
 			return
 		default:
-			logrus.Error(err)
 			return
 		}
 	}
