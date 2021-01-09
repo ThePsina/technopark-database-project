@@ -28,9 +28,8 @@ create unlogged table usr
     about    text
 );
 
-create index index_usr_all on usr (nickname, fullname, email, about);
-cluster usr using index_usr_all;
-
+create index index_users_nickname_hash on usr using hash (nickname);
+create index index_users_email_hash on usr using hash (email);
 
 ------------------------- FORUM ------------------------------------
 create unlogged table forum
@@ -45,10 +44,10 @@ create unlogged table forum
     posts   bigint default 0
 );
 
-create index index_forum_slug_hash on forum using hash (slug);
--- cluster forum using index_forum_slug_hash;
-create index index_usr_fk on forum (usr);
-create index index_forum_all on forum (slug, title, usr, posts, threads);
+create index index_forums on forum (slug, title, usr, posts, threads);
+create index index_forums_slug_hash on forum USING hash (slug);
+
+create index index_forums_users_foreign on forum (usr);
 
 ------------------------- THREAD ---------------------------------------
 create unlogged table thread
@@ -67,13 +66,11 @@ create unlogged table thread
             on delete cascade
 );
 
-create index index_thread_forum_created on thread (forum, created);
--- cluster thread using index_thread_forum_created;
-create index index_thread_slug on thread (slug);
-create index index_thread_slug_hash on thread using hash (slug);
-create index index_thread_all on thread (title, message, created, slug, usr, forum, votes);
-create index index_thread_usr_fk on thread (usr);
-create index index_thread_forum_fk on thread (forum);
+create index index_threads_forum_created on thread (forum, created);
+create index index_threads_created on thread (created);
+
+create index index_threads_slug_hash on thread using hash (slug);
+create index index_threads_id_hash on thread using hash (id);
 
 ------------------------- POST --------------------------------------------------------------
 create unlogged table post
@@ -95,15 +92,12 @@ create unlogged table post
     path     bigint[]
 );
 
-create index index_post_thread_id on post (thread, id);
-create index index_post_thread_path on post (thread, path);
-create index index_post_thread_parent_path on post (thread, parent, path);
-create index index_post_path1_path on post ((path[1]), path);
--- cluster post using index_post_path1_path;
-create index index_post_thread_created_id on post (thread, created, id);
-
-create index index_post_usr_fk on post (usr);
-create index index_post_forum_fk on post (forum);
+create index index_posts_id on post (id);
+create index index_posts_thread_created_id on post (thread, created, id);
+create index index_posts_thread_id on post (thread, id);
+create index index_posts_thread_path on post (thread, path);
+create index index_posts_thread_parent_path on post (thread, parent, path);
+create index index_posts_path1_path on post ((path[1]), path);
 
 --------------------------- VOTE ------------------------------------------
 create unlogged table vote
@@ -131,8 +125,9 @@ create unlogged table forum_users
             references usr (nickname) on delete cascade
 );
 
-create unique index index_forum_nickname on forum_users (forum, nickname);
-cluster forum_users using index_forum_nickname;
+create index index_forum_users on forum_users (forum, nickname);
+create index index_forum_users_nickname on forum_users (nickname);
+cluster forum_users using index_forum_users;
 
 
 ---------------------- UPDATE PATH AND CHECK PARENT ---------------------------
